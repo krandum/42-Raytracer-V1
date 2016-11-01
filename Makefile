@@ -12,7 +12,7 @@
 
 NAME	= rtv1
 
-SRC		= main.c trace.c render.c intersect.c
+SRC		= main.c trace.c render.c intersect.c hooks.c
 OBJ		= $(addprefix $(OBJDIR),$(SRC:.c=.o))
 
 CC		= gcc

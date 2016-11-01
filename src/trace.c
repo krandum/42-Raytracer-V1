@@ -12,6 +12,10 @@
 
 #include "rtv1.h"
 
+
+#include <stdio.h>
+
+
 static void		set_first_intersection(t_view *view, t_ray *ray)
 {
 	int		i;
@@ -23,20 +27,38 @@ static void		set_first_intersection(t_view *view, t_ray *ray)
 	while (!view->objs[++i].is_null)
 	{
 		dist = intersect_any(ray, &(view->objs[i]));
-		if (!dist)
+		if (dist == 0.0)
 			continue ;
 		closest_dist = MIN(closest_dist, dist);
 		if (closest_dist == dist)
 			view->closest = &(view->objs[i]);
 	}
 	if (closest_dist == 2147483647)
-	{
-		view->closest = NULL;
-		view->inter = NULL;
-	}
+		view->closest = 0;
 	else
+	{
 		ft_vector_scale(closest_dist, ray->dir, view->inter);
+		ft_vector_add(view->inter, ray->eye, view->inter);
+	}
 }
+
+// static int		check_for_intersection(t_view *view, t_ray *ray)
+// {
+// 	int		i;
+// 	float	dist;
+// 	t_3dp	temp;
+
+// 	i = -1;
+// 	ft_vector_scale(0.1, ray->dir, &temp);
+// 	ft_vector_add(ray->eye, &temp, ray->eye);
+// 	while (!view->objs[++i].is_null)
+// 	{
+// 		dist = intersect_any(ray, &(view->objs[i]));
+// 		if (dist > 0.0)
+// 			return (1);
+// 	}
+// 	return (0);
+// }
 
 static t_color	get_color(t_view *view)
 {
@@ -47,16 +69,20 @@ static t_color	get_color(t_view *view)
 	i = -1;
 	normal_any(view);
 	ft_vector_normalize(view->normal->dir);
+	total_shade = -2147483648;
 	while (!view->objs[++i].is_null)
 	{
-		if (!view->objs[++i].is_light)
+		if (!view->objs[i].is_light)
 			continue ;
-		ft_vector_sub(view->objs[i].center, view->inter, view->light_ray);
-		ft_vector_normalize(view->light_ray);
-		shade = MAX(0.0, DOT_PRODUCT(view->normal->dir, view->light_ray));
+		ft_vector_scale(1, view->inter, view->light_ray->eye);
+		ft_vector_sub(view->objs[i].center, view->inter, view->light_ray->dir);
+		ft_vector_normalize(view->light_ray->dir);
+		shade = MAX(0.0, DOT_PRODUCT(view->normal->dir, view->light_ray->dir));
+		if (shade >= 0.99)
+			return (ft_color_combine(view->closest->color, 0xFFFFFF));
 		total_shade = MAX(shade, total_shade);
 	}
-	return (view->closest->color * (view->ambient + view->diffuse *
+	return (ft_color_mult(view->closest->color, view->ambient + view->diffuse *
 		total_shade));
 }
 

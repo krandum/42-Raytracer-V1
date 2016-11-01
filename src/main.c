@@ -21,18 +21,29 @@
 
 static void	set_shapes(t_view *view)
 {
-	view->objs = (t_object*)ft_memalloc(sizeof(t_object) * 3);
-	view->objs[0].center = ft_get_3d_point(0.0, 0.0, 100.0);
+	view->objs = (t_object*)ft_memalloc(sizeof(t_object) * 4);
+	view->objs[0].center = ft_get_3d_point(-100.0, 0.0, 50.0);
 	view->objs[0].is_sphere = 1;
 	view->objs[0].shape = ft_memalloc(sizeof(t_sphere));
-	((t_sphere*)view->objs[0].shape)->rad = 200.0;
+	((t_sphere*)view->objs[0].shape)->rad = 70.0;
 	view->objs[0].color = 0xFF;
-	view->objs[1].center = ft_get_3d_point(10.0, 0.0, 0.0);
-	view->objs[1].is_light = 1;
-	view->objs[2].is_null = 1;
+	view->objs[1].center = ft_get_3d_point(100.0, 0.0, 50.0);
+	view->objs[1].is_sphere = 1;
+	view->objs[1].shape = ft_memalloc(sizeof(t_sphere));
+	((t_sphere*)view->objs[1].shape)->rad = 70.0;
+	view->objs[1].color = 0xFF0000;
+	view->objs[2].center = ft_get_3d_point(50.0, 50.0, -200.0);
+	view->objs[2].is_light = 1;
+	view->objs[3].is_null = 1;
 }
 
-int		main(void)
+int			exit_hook(t_view *view)
+{
+	mlx_destroy_window(view->id, view->win);
+	exit(0);
+}
+
+int			main(void)
 {
 	t_view *view;
 
@@ -41,14 +52,19 @@ int		main(void)
 	view->id = mlx_init();
 	view->win = mlx_new_window(view->id, WIN_WIDTH, WIN_HEIGHT,
 		"42-Raytracer v1");
-	view->cam_pos = ft_get_3d_point(0.0, 0.0, -100.0);
-	view->cam_dist = 100.0;
-	view->diffuse = 0.8;
-	view->ambient = 0.2;
+	view->cam_pos = ft_get_3d_point(0.0, 0.0, -50.0);
+	view->cam_dist = 50.0;
+	view->diffuse = 0.95;
+	view->ambient = 0.05;
 	view->closest = (t_object*)ft_memalloc(sizeof(t_object));
-	view->light_ray = ft_get_3d_point(0, 0, 0);
 	view->inter = ft_get_3d_point(0, 0, 0);
 	view->normal = ft_get_ray();
+	view->light_ray = ft_get_ray();
+	view->pressed = (t_keys*)ft_memalloc(sizeof(t_keys));
 	mlx_expose_hook(view->win, expose_hook, view);
+	mlx_hook(view->win, 2, 0, key_pressed_hook, view);
+	mlx_hook(view->win, 3, 0, key_released_hook, view);
+	mlx_hook(view->win, 17, 0, exit_hook, view);
+	mlx_loop_hook(view->id, move_loop_hook, view);
 	mlx_loop(view->id);
 }

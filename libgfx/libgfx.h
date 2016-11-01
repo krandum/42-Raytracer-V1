@@ -23,7 +23,8 @@
 # define DOT_PRODUCT(p0, p1) (p0->x * p1->x + p0->y * p1->y + p0->z * p1->z)
 # define MAGNITUDE(p) (sqrt(p->x * p->x + p->y * p->y + p->z * p->z))
 
-typedef int		t_color;
+typedef int				t_color;
+typedef unsigned char	t_byte;
 
 typedef struct	s_2dp
 {
@@ -73,6 +74,20 @@ typedef struct	s_sphere
 	float		rad;
 }				t_sphere;
 
+typedef struct	s_keys
+{
+	int			q:1;
+	int			w:1;
+	int			e:1;
+	int			a:1;
+	int			s:1;
+	int			d:1;
+	int			up:1;
+	int			left:1;
+	int			right:1;
+	int			down:1;
+}				t_keys;
+
 /*
 **	Everything after endian isn't used in this project
 */
@@ -85,8 +100,8 @@ typedef struct	s_view
 	char		*pixels;
 	t_object	*objs;
 	t_object	*closest;
-	t_3dp		*light_ray;
 	t_3dp		*inter;
+	t_ray		*light_ray;
 	t_ray		*normal;
 	float		diffuse;
 	float		ambient;
@@ -100,6 +115,7 @@ typedef struct	s_view
 	float		x_shift;
 	float		y_shift;
 	float		z_shift;
+	t_keys		*pressed;
 	int			bits_per_pixel;
 	int			size_line;
 	int			endian;
@@ -114,7 +130,9 @@ typedef struct	s_view
 
 t_color		ft_get_color(t_view *view, float c);
 void		ft_init_color_table(t_view *view, int colors);
+t_color		ft_color_mult(t_color c, float r);
 t_color		ft_color_combine(t_color c1, t_color c2);
+t_color		ft_color_partial_combine(t_color c1, t_color c2, float ratio);
 void		ft_mat_bzero(float mat[4][4]);
 void		ft_get_id_matrix(float mat[4][4]);
 void		ft_mat_mult(float m1[4][4], float m2[4][4], float d[4][4]);

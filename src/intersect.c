@@ -15,7 +15,7 @@
 void	normal_sphere(t_view *view)
 {
 	ft_vector_scale(1, view->inter, view->normal->eye);
-	ft_vector_sub(view->closest->center, view->inter, view->normal->dir);
+	ft_vector_sub(view->inter, view->closest->center, view->normal->dir);
 }
 
 void	normal_any(t_view *view)
@@ -41,19 +41,19 @@ void	normal_any(t_view *view)
 
 float	intersect_sphere(t_ray *ray, t_object *obj)
 {
-	float	disc;
+	double	disc;
 	float	v;
 	float	r;
 	t_3dp	*eo;
 
-	eo = ft_get_3d_point(0, 0, 0);
+	eo = ft_get_3d_point(0.0, 0.0, 0.0);
 	ft_vector_sub(obj->center, ray->eye, eo);
 	v = DOT_PRODUCT(eo, ray->dir);
 	r = ((t_sphere*)obj->shape)->rad;
 	disc = r * r - (DOT_PRODUCT(eo, eo) - v * v);
+	free(eo);
 	if (disc < 0)
 		return (0.0);
-	free(eo);
 	return (v - sqrt(disc));
 }
 

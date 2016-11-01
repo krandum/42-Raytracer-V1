@@ -34,11 +34,6 @@ void	ft_vector_normalize(t_3dp *vec)
 	vec->z /= d;
 }
 
-/*
-**	Dot product is conspicuously missing because it is better to have a macro
-**	so it goes faster. Macro is in the header itself.
-*/
-
 void	ft_vector_add(t_3dp *v1, t_3dp *v2, t_3dp *dest)
 {
 	dest->x = v1->x + v2->x;
