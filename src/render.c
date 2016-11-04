@@ -12,29 +12,83 @@
 
 #include "rtv1.h"
 
-void	draw(t_view *view)
+void	*threaded_artist(void *tmp)
 {
-	int		i;
+	int		y;
+	int		x;
 	float	global[4][4];
 	t_ray	*ray;
+	t_3dp	*cur_cam;
+	t_split	*s;
 
+	s = (t_split*)tmp;
+	cur_cam = (t_3dp*)ft_memalloc(sizeof(t_3dp));
 	ft_get_id_matrix(global);
-	ft_mat_rotate(global, view->theta, view->phi, view->psi);
-	ft_mat_translate(global, view->x_shift, view->y_shift, view->z_shift);
+	ft_mat_rotate(global, s->view->theta, s->view->phi, s->view->psi);
+	ft_mat_translate(global, s->view->x_shift,
+		s->view->y_shift, s->view->z_shift);
+	ft_vector_scale(1, s->view->cam_pos, cur_cam);
+	ft_vec_mat_mult(cur_cam, global, cur_cam);
 	ray = ft_get_ray();
-	i = -1;
-	while (++i < WIN_WIDTH * WIN_HEIGHT)
+	y = s->y_start - 1;
+	while (++y < s->y_end)
 	{
-		view->color = 0;
-		ray->eye->x = (i % WIN_WIDTH) - WIN_WIDTH / 2;
-		ray->eye->y = (i / WIN_WIDTH) - WIN_HEIGHT / 2;
-		ray->eye->z = view->cam_dist;
-		ft_vec_mat_mult(ray->eye, global, ray->eye);
-		ft_vector_sub(ray->eye, view->cam_pos, ray->dir);
-		ft_vector_normalize(ray->dir);
-		ft_put_pixel(view, i % WIN_WIDTH, i / WIN_WIDTH, trace_ray(view, ray));
+		x = s->x_start - 1;
+		while (++x < s->x_end)
+		{
+			ray->eye->x = x - WIN_WIDTH / 2;
+			ray->eye->y = y - WIN_HEIGHT / 2;
+			ray->eye->z = s->view->cam_dist;
+			ft_vec_mat_mult(ray->eye, global, ray->eye);
+			ft_vector_sub(cur_cam, ray->eye, ray->dir);
+			ft_vector_normalize(ray->dir);
+			s->exclude = 0;
+			ft_put_pixel(s->view, x, y, trace_ray(s, ray, 0));
+		}
 	}
 	free(ray);
+	free(cur_cam);
+	return (NULL);
+}
+
+void	del_splits(t_split *splits, int num)
+{
+	int		i;
+
+	i = -1;
+	while (++i < num)
+	{
+		free(splits[i].inter);
+		free(splits[i].light_ray);
+		free(splits[i].normal);
+	}
+	free(splits);
+}
+
+void	draw(t_view *view)
+{
+	t_split	*splits;
+	int		i;
+
+	splits = (t_split*)ft_memalloc(sizeof(t_split) * 16);
+	i = -1;
+	while (++i < 16)
+	{
+		splits[i].x_start = (WIN_WIDTH / 4) * (i % 4);
+		splits[i].x_end = (WIN_WIDTH / 4) * (i % 4 + 1);
+		splits[i].y_start = (WIN_HEIGHT / 4) * (i / 4);
+		splits[i].y_end = (WIN_HEIGHT / 4) * (i / 4 + 1);
+		splits[i].view = view;
+		splits[i].inter = ft_get_3d_point(0, 0, 0);
+		splits[i].normal = ft_get_ray();
+		splits[i].light_ray = ft_get_ray();
+		pthread_create(&(splits[i].thread), NULL, threaded_artist,
+			(void*)&splits[i]);
+	}
+	i = -1;
+	while (++i < 16)
+		pthread_join(splits[i].thread, NULL);
+	del_splits(splits, 16);
 }
 
 void	reload(t_view *view)

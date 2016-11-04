@@ -21,20 +21,32 @@
 
 static void	set_shapes(t_view *view)
 {
-	view->objs = (t_object*)ft_memalloc(sizeof(t_object) * 4);
-	view->objs[0].center = ft_get_3d_point(-100.0, 0.0, 50.0);
+	view->objs = (t_object*)ft_memalloc(sizeof(t_object) * 5);
+	view->objs[0].center = ft_get_3d_point(-80.0, 20.0, 30.0);
 	view->objs[0].is_sphere = 1;
 	view->objs[0].shape = ft_memalloc(sizeof(t_sphere));
-	((t_sphere*)view->objs[0].shape)->rad = 70.0;
+	((t_sphere*)view->objs[0].shape)->rad = 80.0;
 	view->objs[0].color = 0xFF;
-	view->objs[1].center = ft_get_3d_point(100.0, 0.0, 50.0);
+	view->objs[0].reflect = 0.65;
+	view->objs[1].center = ft_get_3d_point(80.0, 20.0, 30.0);
 	view->objs[1].is_sphere = 1;
 	view->objs[1].shape = ft_memalloc(sizeof(t_sphere));
-	((t_sphere*)view->objs[1].shape)->rad = 70.0;
+	((t_sphere*)view->objs[1].shape)->rad = 80.0;
 	view->objs[1].color = 0xFF0000;
-	view->objs[2].center = ft_get_3d_point(50.0, 50.0, -200.0);
+	view->objs[1].reflect = 0.95;
+	view->objs[2].center = ft_get_3d_point(0.0, 100.0, -40.0);
 	view->objs[2].is_light = 1;
-	view->objs[3].is_null = 1;
+	view->objs[3].center = ft_get_3d_point(0.0, -130.0, 50.0);
+	view->objs[3].is_sphere = 1;
+	view->objs[3].shape = ft_memalloc(sizeof(t_sphere));
+	((t_sphere*)view->objs[3].shape)->rad = 90.0;
+	view->objs[3].color = 0x00FF00;
+	view->objs[4].is_null = 1;
+}
+
+int		meow(int kitten_id)
+{
+	return (kitten_id - kitten_id);
 }
 
 int			exit_hook(t_view *view)
@@ -52,14 +64,10 @@ int			main(void)
 	view->id = mlx_init();
 	view->win = mlx_new_window(view->id, WIN_WIDTH, WIN_HEIGHT,
 		"42-Raytracer v1");
-	view->cam_pos = ft_get_3d_point(0.0, 0.0, -50.0);
-	view->cam_dist = 50.0;
+	view->cam_pos = ft_get_3d_point(0.0, 0.0, -150.0);
+	view->cam_dist = 150.0;
 	view->diffuse = 0.95;
 	view->ambient = 0.05;
-	view->closest = (t_object*)ft_memalloc(sizeof(t_object));
-	view->inter = ft_get_3d_point(0, 0, 0);
-	view->normal = ft_get_ray();
-	view->light_ray = ft_get_ray();
 	view->pressed = (t_keys*)ft_memalloc(sizeof(t_keys));
 	mlx_expose_hook(view->win, expose_hook, view);
 	mlx_hook(view->win, 2, 0, key_pressed_hook, view);

@@ -16,9 +16,10 @@
 # include "libft.h"
 # include "mlx.h"
 # include "math.h"
+# include <pthread.h>
 
-# define WIN_WIDTH 1600
-# define WIN_HEIGHT 1200
+# define WIN_WIDTH 1200
+# define WIN_HEIGHT 900
 
 # define DOT_PRODUCT(p0, p1) (p0->x * p1->x + p0->y * p1->y + p0->z * p1->z)
 # define MAGNITUDE(p) (sqrt(p->x * p->x + p->y * p->y + p->z * p->z))
@@ -99,14 +100,9 @@ typedef struct	s_view
 	void		*img;
 	char		*pixels;
 	t_object	*objs;
-	t_object	*closest;
-	t_3dp		*inter;
-	t_ray		*light_ray;
-	t_ray		*normal;
 	float		diffuse;
 	float		ambient;
 	float		cam_dist;
-	t_color		color;
 	t_3dp		*cam_pos;
 	float		theta;
 	float		phi;
@@ -127,6 +123,22 @@ typedef struct	s_view
 	int			z_min;
 	int			z_max;
 }				t_view;
+
+typedef struct	s_split
+{
+	int			y_start;
+	int			y_end;
+	int			x_start;
+	int			x_end;
+	t_view		*view;
+	t_object	*closest;
+	t_object	*exclude;
+	t_3dp		*inter;
+	t_ray		*light_ray;
+	t_ray		*normal;
+	float		dist;
+	pthread_t	thread;
+}				t_split;
 
 t_color		ft_get_color(t_view *view, float c);
 void		ft_init_color_table(t_view *view, int colors);

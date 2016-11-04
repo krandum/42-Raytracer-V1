@@ -12,33 +12,36 @@
 
 #include "rtv1.h"
 
-int				move_loop_hook(t_view *view)
+int		move_loop_hook(t_view *v)
 {
-	if (view->pressed->w)
-		view->theta += 0.05;
-	if (view->pressed->s)
-		view->theta -= 0.05;
-	if (view->pressed->a)
-		view->phi -= 0.05;
-	if (view->pressed->d)
-		view->phi += 0.05;
-	if (view->pressed->q)
-		view->psi += 0.05;
-	if (view->pressed->e)
-		view->psi -= 0.05;
-	if (view->pressed->up)
-		view->y_shift -= 5.0;
-	if (view->pressed->down)
-		view->y_shift += 5.0;
-	if (view->pressed->left)
-		view->x_shift -= 5.0;
-	if (view->pressed->right)
-		view->x_shift += 5.0;
-	reload(view);
+	if (v->pressed->w)
+		v->theta -= 0.05;
+	if (v->pressed->s)
+		v->theta += 0.05;
+	if (v->pressed->a)
+		v->phi += 0.05;
+	if (v->pressed->d)
+		v->phi -= 0.05;
+	if (v->pressed->q)
+		v->psi -= 0.05;
+	if (v->pressed->e)
+		v->psi += 0.05;
+	if (v->pressed->up)
+		v->y_shift -= 5.0;
+	if (v->pressed->down)
+		v->y_shift += 5.0;
+	if (v->pressed->left)
+		v->x_shift -= 5.0;
+	if (v->pressed->right)
+		v->x_shift += 5.0;
+	if (v->pressed->w || v->pressed->s || v->pressed->a || v->pressed->d ||
+		v->pressed->q || v->pressed->e || v->pressed->up || v->pressed->down ||
+		v->pressed->left || v->pressed->right)
+		reload(v);
 	return (0);
 }
 
-int				key_pressed_hook(int keycode, t_view *view)
+int		key_pressed_hook(int keycode, t_view *view)
 {
 	if (keycode == KEY_ESC)
 		exit_hook(view);
@@ -65,7 +68,7 @@ int				key_pressed_hook(int keycode, t_view *view)
 	return (0);
 }
 
-int				key_released_hook(int keycode, t_view *view)
+int		key_released_hook(int keycode, t_view *view)
 {
 	if (keycode == KEY_ROT_X_U)
 		view->pressed->w = 0;

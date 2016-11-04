@@ -17,6 +17,9 @@
 # include "libgfx.h"
 # include "mlx.h"
 
+
+# define MAX_DEPTH 3
+
 # define KEY_ESC 53
 
 # define KEY_UP 126 //UP
@@ -31,14 +34,15 @@
 # define KEY_ROT_Z_U 12 //Q
 # define KEY_ROT_Z_D 14 //E
 
-void		normal_any(t_view *view);
+void		normal_any(t_split *split);
 float		intersect_any(t_ray *ray, t_object *obj);
-t_color		trace_ray(t_view *view, t_ray *ray);
+t_color		trace_ray(t_split *split, t_ray *ray, int depth);
 void		reload(t_view *view);
 int			expose_hook(t_view *view);
 int			key_pressed_hook(int keycode, t_view *view);
 int			key_released_hook(int keycode, t_view *view);
 int			move_loop_hook(t_view *view);
 int			exit_hook(t_view *view);
+int			meow(int kitten_id);
 
 #endif

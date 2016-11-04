@@ -12,110 +12,125 @@
 
 #include "rtv1.h"
 
-
-#include <stdio.h>
-
-
-static void		set_first_intersection(t_view *view, t_ray *ray)
+static void		set_first_intersection(t_split *s, t_ray *ray)
 {
 	int		i;
 	float	dist;
 	float	closest_dist;
 
 	i = -1;
-	closest_dist = 2147483647;
-	while (!view->objs[++i].is_null)
+	closest_dist = -2147483648;
+	while (!s->view->objs[++i].is_null)
 	{
-		dist = intersect_any(ray, &(view->objs[i]));
-		if (dist == 0.0)
+		if (s->exclude == &s->view->objs[i])
 			continue ;
-		closest_dist = MIN(closest_dist, dist);
+		dist = intersect_any(ray, &(s->view->objs[i]));
+		if (dist == 0.0 || (s->exclude && dist >= 0.0))
+			continue ;
+		closest_dist = MAX(dist, closest_dist);
 		if (closest_dist == dist)
-			view->closest = &(view->objs[i]);
+			s->closest = &(s->view->objs[i]);
 	}
-	if (closest_dist == 2147483647)
-		view->closest = 0;
+	if (closest_dist == -2147483648)
+		s->closest = 0;
 	else
 	{
-		ft_vector_scale(closest_dist, ray->dir, view->inter);
-		ft_vector_add(view->inter, ray->eye, view->inter);
+		ft_vector_scale(closest_dist, ray->dir, s->inter);
+		ft_vector_add(s->inter, ray->eye, s->inter);
+		s->dist = dist;
 	}
 }
 
-// static int		check_for_intersection(t_view *view, t_ray *ray)
-// {
-// 	int		i;
-// 	float	dist;
-// 	t_3dp	temp;
+/*
+** static int		check_for_intersection(t_split *s, t_object *light)
+** {
+** 	int		i;
+** 	float	dist;
+** 	t_ray	*ray;
+**
+** 	i = -1;
+** 	ray = ft_get_ray();
+** 	ray->eye = light->center;
+** 	ft_vector_sub(s->inter, light->center, ray->dir);
+** 	ft_vector_normalize(ray->dir);
+** 	while (!s->view->objs[++i].is_null)
+** 	{
+** 		if (&(s->view->objs[i]) == s->closest)
+** 			continue ;
+** 		dist = intersect_any(ray, &(s->view->objs[i]));
+** 		if (dist != 0.0 && dist < s->dist)
+** 			return (1);
+** 	}
+** 	free(ray);
+** 	return (0);
+** }
+*/
 
-// 	i = -1;
-// 	ft_vector_scale(0.1, ray->dir, &temp);
-// 	ft_vector_add(ray->eye, &temp, ray->eye);
-// 	while (!view->objs[++i].is_null)
-// 	{
-// 		dist = intersect_any(ray, &(view->objs[i]));
-// 		if (dist > 0.0)
-// 			return (1);
-// 	}
-// 	return (0);
-// }
-
-static t_color	get_color(t_view *view)
+static t_color	get_color(t_split *s)
 {
 	float	total_shade;
 	float	shade;
 	int		i;
 
 	i = -1;
-	normal_any(view);
-	ft_vector_normalize(view->normal->dir);
+	normal_any(s);
 	total_shade = -2147483648;
-	while (!view->objs[++i].is_null)
+	while (!s->view->objs[++i].is_null)
 	{
-		if (!view->objs[i].is_light)
+		if (!s->view->objs[i].is_light)
 			continue ;
-		ft_vector_scale(1, view->inter, view->light_ray->eye);
-		ft_vector_sub(view->objs[i].center, view->inter, view->light_ray->dir);
-		ft_vector_normalize(view->light_ray->dir);
-		shade = MAX(0.0, DOT_PRODUCT(view->normal->dir, view->light_ray->dir));
-		if (shade >= 0.99)
-			return (ft_color_combine(view->closest->color, 0xFFFFFF));
-		total_shade = MAX(shade, total_shade);
+		ft_vector_scale(1, s->inter, s->light_ray->eye);
+		ft_vector_sub(s->view->objs[i].center, s->inter, s->light_ray->dir);
+		ft_vector_normalize(s->light_ray->dir);
+		shade = MAX(0.0, DOT_PRODUCT(s->normal->dir, s->light_ray->dir));
+		if (shade >= 0.97)
+			return (ft_color_partial_combine(0xFFFFFF, s->closest->color,
+				(shade - .97) / (0.03)));
+		else
+			total_shade = MAX(shade, total_shade);
 	}
-	return (ft_color_mult(view->closest->color, view->ambient + view->diffuse *
-		total_shade));
+	return (ft_color_mult(s->closest->color, s->view->ambient +
+		s->view->diffuse * total_shade));
 }
 
-static t_ray	*get_reflected_ray(t_view *view, t_ray *ray)
+static t_ray	*get_reflected_ray(t_split *s, t_ray *ray)
 {
 	t_ray	*out;
-	float	ratio;
+	float	dot;
 
 	out = ft_get_ray();
-	ratio = -DOT_PRODUCT(ray->dir, view->normal->dir);
-	out->eye = view->normal->eye;
-	out->dir = ft_get_3d_point(0, 0, 0);
-	out->dir->x = ray->dir->x + (2.0 * view->normal->dir->x * ratio);
-	out->dir->y = ray->dir->y + (2.0 * view->normal->dir->y * ratio);
-	out->dir->z = ray->dir->z + (2.0 * view->normal->dir->z * ratio);
+	ft_vector_normalize(ray->dir);
+	dot = DOT_PRODUCT(ray->dir, s->normal->dir);
+	ft_vector_scale(1.0, s->normal->eye, out->eye);
+	out->dir->x = ray->dir->x - (2.0 * s->normal->dir->x * dot);
+	out->dir->y = ray->dir->y - (2.0 * s->normal->dir->y * dot);
+	out->dir->z = ray->dir->z - (2.0 * s->normal->dir->z * dot);
 	ft_vector_normalize(out->dir);
 	return (out);
 }
 
-t_color			trace_ray(t_view *view, t_ray *ray)
+t_color			trace_ray(t_split *s, t_ray *ray, int depth)
 {
 	t_ray	*reflected;
 	t_color	color;
+	t_color	rl;
 
-	set_first_intersection(view, ray);
-	if (!view->inter || !view->closest)
+	set_first_intersection(s, ray);
+	if (!s->inter || !s->closest)
 		return (0);
-	color = get_color(view);
-	if (view->closest->reflect > 0.0 && view->closest->reflect <= 1.0)
+	color = get_color(s);
+	rl = 0;
+	if (s->closest->reflect > 0.0 && s->closest->reflect <= 1.0 &&
+		depth < MAX_DEPTH)
 	{
-		reflected = get_reflected_ray(view, ray);
-		color = ft_color_combine(color, trace_ray(view, reflected));
+		s->exclude = s->closest;
+		reflected = get_reflected_ray(s, ray);
+		rl = trace_ray(s, reflected, depth + 1);
 		free(reflected);
 	}
+	if (rl)
+		return (rl);
+	color = ft_color_partial_combine(rl, color, s->exclude ?
+		s->exclude->reflect : s->closest->reflect);
 	return (color);
 }
